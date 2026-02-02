@@ -1,7 +1,8 @@
-package com.example.flightsearch.data
+package com.example.flightsearch.data.dao
 
 import androidx.room.Dao
 import androidx.room.Query
+import com.example.flightsearch.data.Airport
 import kotlinx.coroutines.flow.Flow
 
 @Dao
