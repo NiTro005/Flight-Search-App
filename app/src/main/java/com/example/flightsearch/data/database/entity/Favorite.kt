@@ -1,4 +1,4 @@
-package com.example.flightsearch.data
+package com.example.flightsearch.data.database.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

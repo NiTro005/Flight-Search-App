@@ -1,6 +1,6 @@
 package com.example.flightsearch.data.repository
 
-import com.example.flightsearch.data.Airport
+import com.example.flightsearch.data.database.entity.Airport
 import kotlinx.coroutines.flow.Flow
 
 interface AirportRepository {

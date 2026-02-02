@@ -1,7 +1,7 @@
 package com.example.flightsearch.data.repository
 
-import com.example.flightsearch.data.Airport
-import com.example.flightsearch.data.dao.AirportDao
+import com.example.flightsearch.data.database.entity.Airport
+import com.example.flightsearch.data.database.dao.AirportDao
 import kotlinx.coroutines.flow.Flow
 
 class OfflineAirportRepository(val airportDao: AirportDao) : AirportRepository {

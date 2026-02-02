@@ -1,7 +1,7 @@
 package com.example.flightsearch.data.repository
 
-import com.example.flightsearch.data.Favorite
-import com.example.flightsearch.data.dao.FavoriteDao
+import com.example.flightsearch.data.database.entity.Favorite
+import com.example.flightsearch.data.database.dao.FavoriteDao
 import kotlinx.coroutines.flow.Flow
 
 class OfflineFavoriteRepository(val favoriteDao: FavoriteDao): FavoriteRepository {

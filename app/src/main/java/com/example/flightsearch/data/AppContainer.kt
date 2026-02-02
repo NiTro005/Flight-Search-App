@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.flightsearch.data.database.FlightDatabase
 import com.example.flightsearch.data.repository.AirportRepository
 import com.example.flightsearch.data.repository.DataStoreRepository
 import com.example.flightsearch.data.repository.FavoriteRepository
