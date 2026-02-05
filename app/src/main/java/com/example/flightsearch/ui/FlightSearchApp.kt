@@ -3,6 +3,7 @@ package com.example.flightsearch.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -20,11 +21,11 @@ fun FlightSearchApp(viewModel: FlightMainViewModel) {
     Scaffold(
         topBar = {
             Box(
-                modifier = Modifier.background(MaterialTheme.colorScheme.primary)
+                modifier = Modifier.background(MaterialTheme.colorScheme.primary).fillMaxWidth()
             ) {
                 Text(
                     text = stringResource(R.string.flight_search),
-                    fontSize = 36.sp,
+                    fontSize = 28.sp,
                     color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.padding(top = 24.dp, bottom = 8.dp).align(Alignment.BottomStart)
                 )

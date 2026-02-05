@@ -2,4 +2,9 @@
     <string name="app_name">Flight Search</string>
     <string name="flight_search">Flight Search</string>
     <string name="search">Search</string>
+    <string name="favorite_routes">Favorite routes</string>
+    <string name="flights_from">Flights from %1$s</string>
+    <string name="depart">Depart</string>
+    <string name="like">Like</string>
+    <string name="arrive">Arrive</string>
 </resources>
