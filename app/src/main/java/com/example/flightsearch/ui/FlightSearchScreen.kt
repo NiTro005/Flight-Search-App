@@ -15,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,10 +31,10 @@ fun FlightSearchScreen(
     viewModel: FlightMainViewModel,
     modifier: Modifier = Modifier
 ) {
-    val uiState =  viewModel.uiState.value
+    val uiState =  viewModel.uiState.collectAsState()
     Column(modifier = modifier) {
         FlightTextField(
-            uiState = uiState,
+            uiState = uiState.value,
             search = viewModel::autoCompleteAgree,
             onValueChange = viewModel::userInputChange
         )
