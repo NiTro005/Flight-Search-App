@@ -17,6 +17,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -27,16 +33,35 @@ class FlightMainViewModel(
     private val favoriteRepository: FavoriteRepository
 ): ViewModel() {
 
+    private val userInput = MutableStateFlow<String>("")
     val uiState: StateFlow<FlightUIState> = combine(
         dataStoreRepository.prevRequest,
         airportRepository.getAllAirports(),
-        favoriteRepository.getFavAirports()
+        favoriteRepository.getFavAirports(),
+        userInput.debounce(300)
+            .distinctUntilChanged()
+            .flatMapLatest { text ->
+                if(text.isBlank()) {
+                    flowOf(emptyList())
+                } else {
+                    airportRepository.getByCodeOrName(text)
+                }
+            },
+        userInput
     ) {
-        request, airports, favorites ->
+        request, airports, favorites, autocomplete, input ->
+        val airportsMap = airports.associate { it.iata_code to it.name }
+        val favoritesSet = favorites.map { it.departure_code to it.destination_code }.toSet()
+        val currentAirport = airports.find {it.iata_code == request}
         FlightUIState(
-            request = request,
+            userInput = input,
+            dataStoreRequest = request,
             airports = airports,
-            favorites = favorites
+            currentAirport = currentAirport,
+            favorites = favorites,
+            autoComplete = autocomplete,
+            airportsCards = allAirportsCardGen(airportsMap, favoritesSet, currentAirport),
+            favoritesCards = allFavoritesCardGen(favoritesSet, airportsMap),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -44,23 +69,46 @@ class FlightMainViewModel(
         initialValue = FlightUIState()
     )
 
+    init {
+        viewModelScope.launch {
+            userInput.value = dataStoreRepository.prevRequest.first()
+        }
+    }
 
-    fun getAllFavoritesCard(): List<AirportsOnCardUi> {
-        return uiState.value.favorites.map{ favorite ->
-            favorite.onAirportsOnCardUi().copy(
-                descr_dep = uiState.value.airports
-                    .find { it.iata_code == favorite.departure_code}
-                    ?.name ?: "" ,
-                descr_arr = uiState.value.airports
-                    .find { it.iata_code == favorite.destination_code}
-                    ?.name ?: "" ,
+    private fun allFavoritesCardGen(
+        favorites: Set<Pair<String, String>>,
+        airports: Map<String, String>): List<AirportsOnCardUi> {
+        return favorites.map{ favorite ->
+            val departure = favorite.first
+            val destination = favorite.second
+            AirportsOnCardUi(
+                iata_dep = departure,
+                iata_arr = destination,
+                descr_dep = airports[departure] ?: "",
+                descr_arr = airports[destination] ?: "",
+                isFavorite = true
             )
         }
     }
 
-    fun getAllRequestCard(): List<AirportsOnCardUi> {
-        return TODO()
+    private fun allAirportsCardGen
+                (airports: Map<String, String>,
+                 favorites: Set<Pair<String, String>>,
+                 currentAirport: Airport?): List<AirportsOnCardUi> {
+        return if (currentAirport != null) {
+            val airportsDistCur = airports - currentAirport.iata_code
+            airportsDistCur.map { airport ->
+                AirportsOnCardUi(
+                    iata_dep = currentAirport.iata_code,
+                    descr_dep = currentAirport.name,
+                    iata_arr = airport.key,
+                    descr_arr = airport.value,
+                    isFavorite = (currentAirport.iata_code to airport.key) in favorites
+                )
+            }
+        } else emptyList()
     }
+
 
     fun touchOnFavorite(card: AirportsOnCardUi) {
         viewModelScope.launch {
@@ -70,17 +118,14 @@ class FlightMainViewModel(
         }
     }
 
-    fun searchAutoComplete(request: String): List<Airport> {
-        return airportRepository.getByCodeOrName(request).stateIn(
-            viewModelScope,
-
-        )
-    }
-
-    fun autoCompleteAgree(airport: String) {
+    fun autoCompleteAgree(request: String) {
         viewModelScope.launch {
-            dataStoreRepository.saveRequest(airport)
+            dataStoreRepository.saveRequest(request)
         }
+    }
+    
+    fun userInputChange(input: String) {
+        userInput.value = input
     }
 
     companion object {
@@ -101,32 +146,29 @@ class FlightMainViewModel(
 
 fun AirportsOnCardUi.onFavorite(): Favorite {
     return Favorite(
-        destination_code = iota_arr,
-        departure_code = iota_dep,
+        destination_code = iata_arr,
+        departure_code = iata_dep,
         id = id
-    )
-}
-
-fun Favorite.onAirportsOnCardUi(): AirportsOnCardUi {
-    return AirportsOnCardUi(
-        iota_dep = departure_code,
-        iota_arr = destination_code,
-        isFavorite = true
     )
 }
 
 
 data class FlightUIState(
-    val request: String = "",
+    val dataStoreRequest: String = "",
+    val userInput: String = "",
+    val currentAirport: Airport? = null,
     val airports: List<Airport> = listOf(),
-    val favorites: List<Favorite> = listOf()
+    val favorites: List<Favorite> = emptyList(),
+    val autoComplete: List<Airport> = emptyList(),
+    val airportsCards: List<AirportsOnCardUi> = emptyList(),
+    val favoritesCards: List<AirportsOnCardUi> = emptyList()
 )
 
 data class AirportsOnCardUi(
     val id: Int = 0,
-    val iota_dep: String = "",
+    val iata_dep: String = "",
     val descr_dep: String = "",
-    val iota_arr: String = "",
+    val iata_arr: String = "",
     val descr_arr: String = "",
     val isFavorite: Boolean = false
 )
